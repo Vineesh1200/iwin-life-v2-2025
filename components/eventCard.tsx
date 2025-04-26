@@ -52,7 +52,7 @@ const EventsCard: React.FC<EventsCardProps> = ({ event }) => {
 
     return (
         <Fragment>
-            <Pressable className="mb-4 border-2 border-white rounded-lg p-2.5 cursor-pointer shadow-cardBoxShadow" onPress={() => openModal(event)}>
+            <Pressable className={`mb-4 border-2 ${isDarkMode ? 'border-grayLightCustom' : 'border-0'} rounded-lg p-2.5 cursor-pointer shadow-cardBoxShadow`} onPress={() => openModal(event)}>
                 <View className="flex-row items-center gap-3">
 
                     <Image

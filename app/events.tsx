@@ -20,6 +20,7 @@ const Events = () => {
     const [limitCount] = useState<number>(10);
     const [allEvents, setAllEvents] = useState<any[]>([]);
     const { getEvents, events, loading, error } = useFetchEvents();
+    const [stopPagination, setStopPagination] = useState(false);
     const [isModalVisible, setModalVisible] = useState<boolean>(false);
     const [isModalVisible2, setModalVisible2] = useState<boolean>(false);
     const [selectedEvent, setSelectedEvent] = useState<any>(null);
@@ -46,6 +47,8 @@ const Events = () => {
     useEffect(() => {
         if (events.length > 0) {
             setAllEvents(prevEvents => [...prevEvents, ...events]);
+        } else {
+            setStopPagination(true);
         }
     }, [events]);
 
@@ -96,7 +99,7 @@ const Events = () => {
                     renderItem={({ item }) => (
                         <EventsCard event={item} />
                     )}
-                    onEndReached={loadMoreEvents}
+                    onEndReached={stopPagination ? undefined : loadMoreEvents}
                     onEndReachedThreshold={0.5}
                     ListFooterComponent={loading ? <ActivityIndicator size="large" color="white" /> : null}
                 />

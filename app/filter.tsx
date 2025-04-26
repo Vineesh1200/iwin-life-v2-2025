@@ -17,6 +17,7 @@ const Filter = () => {
     const [limitCount] = useState<number>(10);
     const [allEvents, setAllEvents] = useState<any[]>([]);
     const { getEvents, events, loading, error } = useFetchEvents();
+    const [stopPagination, setStopPagination] = useState(false);
     const [categories, setCategories] = useState([{ id: 1, name: 'Theatre & Broadway Shows' }, { id: 2, name: 'Live Concerts' }, { id: 3, name: 'Pop-up Dining Experiences' }, { id: 4, name: 'Fitness Bootcamps' }, { id: 5, name: 'Conferences & Summits' }]);
     const [selectedCategory, setSelectedCategory] = useState<string>();
 
@@ -31,6 +32,8 @@ const Filter = () => {
     useEffect(() => {
         if (events.length > 0) {
             setAllEvents(prevEvents => [...prevEvents, ...events]);
+        } else {
+            setStopPagination(true);
         }
     }, [events]);
 
@@ -51,21 +54,16 @@ const Filter = () => {
                     <View style={{ width: 24 }} />
                 </View>
                 <View className={`${isTablet ? 'flex-row' : 'flex-col'} gap-2 w-full h-full`}>
-                    <View style={styles.filterOptions}>
+                    <View>
                         <Text className={`${isDarkMode ? 'text-white' : 'text-black'} font-viga px-5 py-3`} style={styles.headerTitle}>Options</Text>
-                        <FlatList
-                            className="px-2"
-                            data={categories}
-                            keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-                            renderItem={({ item }) => (
-                                <Pressable onPress={() => setSelectedCategory(item.name)}>
-                                    <View className={`flex-row items-center justify-content-between gap-3 px-5 py-3 mt-2 rounded-md cursor-pointer border-b-2 border-gray-300`}>
-                                        <Icon name="arrow-right" size={24} color={`${(selectedCategory == item.name ? '#000' : (isDarkMode ? '#FFF' : 'rgb(107 114 128)'))}`} />
-                                        <Text className={`${(selectedCategory == item.name ? 'text-black' : (isDarkMode ? 'text-white' : 'text-gray-500'))} font-viga`}>{item.name}</Text>
-                                    </View>
-                                </Pressable>
-                            )}
-                        />
+                        {categories.map((item, index) => (
+                            <Pressable onPress={() => setSelectedCategory(item.name)} key={index}>
+                                <View className={`flex-row flex-wrap justify-left gap-3 px-5 py-3 mt-2 rounded-md border-b-2 border-gray-300`}>
+                                    <Icon name="arrow-right" size={24} color={`${(selectedCategory == item.name ? (isDarkMode ? '#FFF' : 'transperant') : (isDarkMode ? 'transperant' : '#FFF'))}`} />
+                                    <Text className={`${(isDarkMode ? 'text-white' : 'text-gray-500')} font-viga`}>{item.name}</Text>
+                                </View>
+                            </Pressable>
+                        ))}
                     </View>
                     <View className={`${isDarkMode ? 'text-white' : 'text-black'} flex-1 font-viga mb-11`} style={styles.events}>
                         <Text className={`${isDarkMode ? 'text-white' : 'text-black'} font-viga px-5 py-3`} style={styles.headerTitle}>{selectedCategory}</Text>
@@ -76,7 +74,7 @@ const Filter = () => {
                             renderItem={({ item }) => (
                                 <EventsCard event={item} />
                             )}
-                            onEndReached={loadMoreEvents}
+                            onEndReached={stopPagination ? undefined : loadMoreEvents}
                             onEndReachedThreshold={0.5}
                             ListFooterComponent={loading ? <ActivityIndicator size="large" color="white" /> : null}
                         />
@@ -93,7 +91,6 @@ const styles = StyleSheet.create({
     },
     filterOptions: {
         width: "100%",
-        maxWidth: 300,
     },
     events: {
         flex: 2
