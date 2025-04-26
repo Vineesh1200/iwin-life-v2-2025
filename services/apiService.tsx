@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'https:wynne.lol/api/',
+    baseURL: 'https://wynne.lol/api/',
     headers: {
         Accept: 'application/json',
     },
@@ -14,8 +14,7 @@ API.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
-    },
-    (error: Error) => Promise.reject(error)
+    },//Error) => Promise.reject(error)
 );
 
 API.interceptors.response.use(
