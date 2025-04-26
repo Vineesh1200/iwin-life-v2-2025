@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, Pressable, useWindowDimensions, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, FlatList, Image, StyleSheet, Pressable, useWindowDimensions, View, useColorScheme, Button } from 'react-native';
 import React, { useState, useEffect, Fragment } from 'react';
 import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
@@ -6,28 +6,15 @@ import SearchBar from '@/components/searchBar';
 import { useFetchEvents } from '@/hooks/useFetchEvents';
 import EventModal from '@/components/eventModal';
 import BigCalendar from '@/components/bigCalendar';
+import EventsCard from '@/components/eventCard';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Link } from 'expo-router';
 
 const Events = () => {
 
     const { width } = useWindowDimensions();
     const colorScheme = useColorScheme();
     const isDarkMode = colorScheme === 'dark';
-
-    const dynamicStyles = {
-        mainImage: {
-            width: width > 768 ? 130 : 110,
-            height: width > 768 ? 100 : 80,
-        },
-        titleText: {
-            fontSize: width > 768 ? 25 : 21,
-        },
-        dateText: {
-            fontSize: width > 768 ? 20 : 18,
-        },
-        descriptionText: {
-            fontSize: width > 768 ? 18 : 16,
-        },
-    }
 
     const [pageCount, setPageCount] = useState<number>(1);
     const [limitCount] = useState<number>(10);
@@ -68,11 +55,6 @@ const Events = () => {
         }
     };
 
-    const openModal = (event: any) => {
-        setSelectedEvent(event);
-        setModalVisible(true);
-    };
-
     const closeModal = () => {
         setSelectedEvent(null);
         setModalVisible(false);
@@ -93,42 +75,26 @@ const Events = () => {
                     <Image source={images.logo} style={styles.logo} className={`cursor-pointer`} />
                     <SearchBar />
                     <Pressable onPress={() => openModal2()}>
-                        <Image source={icons.filter} className={`cursor-pointer ${!isDarkMode && 'invert'}`} />
+                        <Icon name="calendar-month" size={24} color={`${isDarkMode ? '#FFF' : '#000'}`} />
                     </Pressable>
+                    <Link href='/filter'>
+                        <Image source={icons.filter} className={`cursor-pointer ${!isDarkMode && 'invert'} mt-1`} />
+                    </Link>
                 </View>
-
+                {/* <View className={`flex-row items-center justify-end px-5 w-full mb-3 `}>
+                    <Link href='/filter'>
+                        <View className={`flex-row items-center gap-2 font-viga px-3 py-2 border-2 border-gray-300 rounded-md cursor-pointer`}>
+                            <Icon name="filter-list" size={24} color={`${isDarkMode ? '#FFF' : '#000'}`} />
+                            Filter
+                        </View>
+                    </Link>
+                </View> */}
                 <FlatList
-                    className="p-4"
+                    className="px-4 pt-1 pb-4"
                     data={allEvents}
                     keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
                     renderItem={({ item }) => (
-                        <Pressable className="mb-4 border-2 border-white rounded-lg p-2.5 cursor-pointer shadow-cardBoxShadow" onPress={() => openModal(item)}>
-                            <View className="flex-row items-center gap-3">
-
-                                <Image
-                                    source={item.imageURL ? { uri: item.imageURL } : images.notFound}
-                                    style={dynamicStyles.mainImage}
-                                    defaultSource={images.notFound}
-                                    className="rounded-md"
-                                />
-
-                                <View className="flex-1">
-                                    <Text className={`font-viga ${isDarkMode ? 'text-white' : 'text-black'}`} style={dynamicStyles.titleText} numberOfLines={1} ellipsizeMode="tail">
-                                        {item.name}
-                                    </Text>
-                                    <View className='flex-row items-center'>
-                                        <Image defaultSource={images.calendarIcon} style={styles.calendarIcon}></Image>
-                                        <Text className="text-grayCustom font-viga" style={dynamicStyles.dateText} numberOfLines={1} ellipsizeMode="tail">
-                                            {(item.startTime || item.date) && formatDate(item.startTime ?? item.date)} - {(item.endTime || item.date) && formatDate(item.endTime ?? item.date)}
-                                        </Text>
-                                    </View>
-                                    <Text className="text-grayLightCustom font-viga" style={dynamicStyles.descriptionText} numberOfLines={2} ellipsizeMode="tail">
-                                        {item.details}
-                                    </Text>
-                                </View>
-
-                            </View>
-                        </Pressable>
+                        <EventsCard event={item} />
                     )}
                     onEndReached={loadMoreEvents}
                     onEndReachedThreshold={0.5}
@@ -149,8 +115,4 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
     },
-    calendarIcon: {
-        width: 20,
-        height: 20
-    }
 });
