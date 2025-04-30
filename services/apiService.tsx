@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'https://wynne.lol/api/',
+    baseURL: 'http://localhost:3020/',
     headers: {
         Accept: 'application/json',
     },
