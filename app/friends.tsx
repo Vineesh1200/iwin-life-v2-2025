@@ -83,7 +83,7 @@ const FriendsSearchScreen = () => {
                 <Text className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'} font-viga`}>Find Friends</Text>
             </View>
 
-            <View className={`w-full max-w-[1200px] mx-auto pt-5 pb-3 px-2`}>
+            <View className={`w-full max-w-[1200px] mx-auto pt-5 pb-3 px-3`}>
                 <View className={`flex-row items-center rounded-md ${isDark ? 'bg-[#2d2d2d]' : 'bg-white'}`}>
                     <TextInput
                         className={`flex-1 px-4 py-3  ${isDark ? 'text-white' : 'text-black'} font-viga`}
@@ -95,7 +95,7 @@ const FriendsSearchScreen = () => {
                 </View>
             </View>
 
-            <ScrollView className="flex-1 px-2">
+            <ScrollView className="flex-1 px-3">
                 <View className='w-full max-w-[1200px] mx-auto'>
                     <Text className={`text-lg px-4 py-2 ${isDark ? 'text-gray-300' : 'text-gray-600'} font-viga`}>
                         {filteredFriends.length} {filteredFriends.length === 1 ? 'friend' : 'friends'} found
