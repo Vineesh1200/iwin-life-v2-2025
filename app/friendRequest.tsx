@@ -59,7 +59,6 @@ const FeedScreen = () => {
                     style={styles.mainImage}
                 />
                 <Text className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'} font-viga`}>Friend Requests</Text>
-                <View style={{ width: 100 }} />
             </View>
 
             <ScrollView className="flex-1">
