@@ -1,5 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { images } from '@/constants/images';
 import { useState } from 'react';
@@ -48,6 +48,7 @@ const SignUpScreen = () => {
                 const response = await createAccount(formData);
                 if (response.success) {
                     setFormData(createAccountData)
+                    router.push('/signin');
                     Alert.alert('Success', 'Account created successfully');
                 } else {
                     Alert.alert('Failed', 'Account creation failed successfully');

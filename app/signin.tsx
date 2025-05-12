@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { images } from '@/constants/images';
 import { login } from '@/services/userApi';
+import { storeData } from '@/services/localStorage';
 
 const loginData = {
     email: '',
@@ -35,8 +36,10 @@ const SignInScreen = () => {
         if (validateForm()) {
             try {
                 const response = await login(formData);
-                if (response.success) {
-                    setFormData(loginData)
+                if (response.status) {
+                    setFormData(loginData);
+                    storeData('token', response.token);
+                    router.push('/home');
                     Alert.alert('Success', 'User login successfully');
                 } else {
                     Alert.alert('Failed', 'User login failed successfully');

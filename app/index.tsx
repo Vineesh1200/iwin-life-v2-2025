@@ -1,16 +1,19 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
+import { getData } from '@/services/localStorage';
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      router.push('/events');
-    }, 0);
-
-    return () => clearTimeout(timeout);
+    getData('token').then((token: string) => {
+      if (token) {
+        router.push('/home');
+      } else {
+        router.push('/signin');
+      }
+    })
   }, []);
 
   return (

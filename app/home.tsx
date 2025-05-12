@@ -1,55 +1,32 @@
-import React from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, useWindowDimensions, Linking } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { images } from '@/constants/images';
+import { useFetchHome } from '@/hooks/useFetchHome';
+import { alternateLike, joiningPeople } from '@/services/homeApi';
+import { EventItem } from '@/interfaces/interfaces';
+import { router } from 'expo-router';
 
 const HomeScreen = () => {
 
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
     const { width } = useWindowDimensions();
-    const updateImage = width >= 768 ? '500px' : '300px';
+    const updateImage = width >= 768 ? 500 : 250;
+    const { getHomeEvents, homeEvents, loading, error } = useFetchHome();
+    const [allEvents, setAllEvents] = useState<EventItem[]>([]);
+    const [pageCount, setPageCount] = useState<number>(1);
+    const [limitCount] = useState<number>(10);
+    const [stopPagination, setStopPagination] = useState(false);
+    const [expandedIndexes, setExpandedIndexes] = useState<{ [key: number]: boolean }>({});
 
-    const events = [
-        {
-            id: 1,
-            title: 'Outdoor Dance Party',
-            image: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80',
-            meta: 'Friday · 7PM · Central Park',
-            description: 'Join the rhythm under the stars with live DJs, an open dance floor, and spontaneous joy. Open to all skill levels!',
-            attendees: [
-                'https://randomuser.me/api/portraits/women/44.jpg',
-                'https://randomuser.me/api/portraits/men/46.jpg',
-                'https://randomuser.me/api/portraits/women/32.jpg'
-            ],
-            count: '+ 48 people going'
-        },
-        {
-            id: 2,
-            title: 'Spring Craft Fair',
-            image: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80',
-            meta: 'Saturday · 2PM · Union Square',
-            description: 'Browse handmade goods, meet local artists, and enjoy delicious street food. A perfect weekend family vibe.',
-            attendees: [
-                'https://randomuser.me/api/portraits/women/29.jpg',
-                'https://randomuser.me/api/portraits/men/35.jpg'
-            ],
-            count: '+ 22 people going'
-        },
-        {
-            id: 3,
-            title: 'Hidden Food Tour',
-            image: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80',
-            meta: 'Sunday · 5PM · Lower East Side',
-            description: 'Taste your way through hidden culinary gems on this guided food tour. Includes 5+ tastings and drink pairings.',
-            attendees: [
-                'https://randomuser.me/api/portraits/men/23.jpg',
-                'https://randomuser.me/api/portraits/women/54.jpg',
-                'https://randomuser.me/api/portraits/men/16.jpg'
-            ],
-            count: '+ 34 people going'
-        }
-    ];
+    const toggleExpand = (index: number) => {
+        console.log(expandedIndexes)
+        setExpandedIndexes((prev: { [key: number]: boolean }) => ({
+            ...prev,
+            [index]: !prev[index]
+        }));
+    };
 
     const quotes = [
         "Went solo. Left with new friends.",
@@ -57,12 +34,68 @@ const HomeScreen = () => {
         "I found my weekend crew."
     ];
 
+    const getmeta = (date: string, time: string) => {
+
+        const today = new Date(date);
+        const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+
+        const [hourStr, minuteStr] = time.split(':');
+        let hours = parseInt(hourStr, 10);
+        const minutes = parseInt(minuteStr, 10);
+
+        const isPM = hours >= 12;
+        const suffix = isPM ? 'PM' : 'AM';
+
+        hours = hours % 12;
+        hours = hours === 0 ? 12 : hours;
+
+        const formattedTime =
+            minutes === 0
+                ? `${hours}${suffix}`
+                : `${hours}:${String(minutes).padStart(2, '0')}${suffix}`;
+
+        return `${dayName} · ${formattedTime}`;
+
+    }
+
+    const updateLike = (_id: string) => {
+        alternateLike(_id).then();
+        setAllEvents((prev: EventItem[]) =>
+            prev.map((event: EventItem) => ({ ...event, isLiked: !event.isLiked }))
+        );
+    };
+
+    const updateIsGoing = (_id: string) => {
+        joiningPeople(_id).then();
+        setAllEvents((prev: EventItem[]) =>
+            prev.map((event: EventItem) => ({ ...event, isGoing: !event.isGoing }))
+        );
+    };
+
+    useEffect(() => {
+        getHomeEvents({ pageCount, limitCount });
+    }, [pageCount]);
+
+    useEffect(() => {
+        if (homeEvents?.length > 0) {
+            setAllEvents(prevEvents => [...prevEvents, ...homeEvents]);
+        } else {
+            setStopPagination(true);
+        }
+    }, [homeEvents]);
+
+    const loadMoreEvents = () => {
+        if (!loading) {
+            setPageCount(prevPage => prevPage + 1);
+        }
+    };
+
     return (
         <ScrollView className={`flex-1 ${isDark ? 'bg-[#1a1a1a]' : 'bg-[#ffffff]'}`}>
             <View className='w-full max-w-[1200px] mx-auto'>
                 <Image
                     source={images.logo}
-                    className="mx-auto mt-6"
+                    className="mx-auto mt-8"
                     style={styles.mainImage}
                 />
 
@@ -88,59 +121,79 @@ const HomeScreen = () => {
                         This Week's Picks
                     </Text>
 
-                    {events.map((event) => (
-                        <View
-                            key={event.id}
-                            className={`rounded-xl p-6 mb-8 ${isDark ? 'bg-[#2a2a2a]' : 'bg-[#ffffff]'} border ${isDark ? 'border-[#444444]' : 'border-[#dddddd]'} shadow-lg`}
-                        >
-                            {event.image && (
-                                <Image
-                                    source={{ uri: event.image }}
-                                    className={`w-full h-[${updateImage}] rounded-lg mb-4`}
-                                    resizeMode="cover"
-                                />
-                            )}
-                            <View className="flex-row justify-between items-center mb-3">
-                                <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-black'} font-viga`}>
-                                    {event.title}
-                                </Text>
-                                <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'} font-viga`}>
-                                    {event.meta}
-                                </Text>
-                            </View>
-                            <Text className={`text-base mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'} font-viga`}>
-                                {event.description}
-                            </Text>
-                            <View className="flex-row items-center mb-4">
-                                <View className="flex-row -space-x-3">
-                                    {event.attendees.map((attendee, index) => (
+                    {allEvents.map((event: EventItem, index: number) => {
+                        const isExpanded = expandedIndexes[index];
+                        const shouldTruncate = event?.details?.length > 200;
+                        const visibleText = isExpanded || !shouldTruncate
+                            ? event.details
+                            : event.details.substring(0, 200);
+                        return (
+                            <TouchableOpacity onPress={() => router.push('/detail')}>
+                                <View
+                                    key={index}
+                                    className={`rounded-xl p-5 mb-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-[#ffffff]'} border ${isDark ? 'border-[#444444]' : 'border-[#dddddd]'} shadow-lg`}
+                                >
+                                    {event.imageURL && (
                                         <Image
-                                            key={index}
-                                            source={{ uri: attendee }}
-                                            className="w-8 h-8 rounded-full border-2 border-white"
+                                            source={{ uri: event.imageURL }}
+                                            className={`rounded-lg mb-4`}
+                                            style={{ height: updateImage, width: '100%' }}
                                         />
-                                    ))}
+                                    )}
+                                    <View className="flex-row justify-between items-center mb-3">
+                                        <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-black'} font-viga`}>
+                                            {event.name}
+                                        </Text>
+                                        <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'} font-viga`}>
+                                            {getmeta(event.date, event.time)}
+                                        </Text>
+                                    </View>
+                                    <Text className={`text-base mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'} font-viga`}>
+                                        {visibleText}
+                                        {shouldTruncate && (
+                                            <TouchableOpacity
+                                                onPress={() => toggleExpand(index)}
+                                                className="text-blue-500 cursor-pointer ml-1"
+                                            >
+                                                {isExpanded ? ' See less' : '... See more'}
+                                            </TouchableOpacity>
+                                        )}
+                                    </Text>
+                                    <View className="flex-row items-center mb-4">
+                                        <View className="flex-row -space-x-3">
+                                            {event?.firstTwoVisitors?.map((attendee: string, index2: number) => (
+                                                <Image
+                                                    key={index2}
+                                                    source={{ uri: attendee }}
+                                                    defaultSource={{uri:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQD116U9ZCk8bEaanCeB5rSCC2uqY5Ka_2_EA&s"}}
+                                                    className="w-8 h-8 rounded-full border-2 border-white"
+                                                />
+                                            ))}
+                                        </View>
+                                        <Text className={`text-sm ${event?.firstTwoVisitors?.length > 0 && 'ml-2'} ${isDark ? 'text-gray-300' : 'text-gray-500'} font-viga`}>
+                                            {`+ ${event.totalVisitingCount} people going`}
+                                        </Text>
+                                    </View>
+                                    <View className="flex-row flex-wrap gap-2">
+                                        <TouchableOpacity className={`px-4 py-2 rounded-full ${isDark ? 'bg-green-800' : 'bg-green-100'}`} onPress={() => updateIsGoing(event._id)}>
+                                            <Text className={`font-semibold ${isDark ? 'text-green-100' : 'text-green-800'} font-viga`}>{event.isGoing ? "✔ I'm Going" : "✖ Can't Make It"}</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity className={`px-4 py-2 rounded-full ${isDark ? 'bg-red-800' : 'bg-red-100'}`} onPress={() => updateLike(event._id)}>
+                                            <Text className={`${isDark ? 'text-red-100' : 'text-red-800'} font-viga`}>❤️ {event.isLiked ? 'Like' : 'Unlike'}</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity className={`px-4 py-2 rounded-full ${isDark ? 'bg-blue-800' : 'bg-blue-100'}`}>
+                                            <TouchableOpacity onPress={() => Linking.openURL(event.website)}>
+                                                <Text className={`${isDark ? 'text-blue-100' : 'text-blue-800'} font-viga`}>🔗 Share</Text>
+                                            </TouchableOpacity>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity className={`px-4 py-2 rounded-full ${isDark ? 'bg-purple-800' : 'bg-purple-100'}`}>
+                                            <Text className={`${isDark ? 'text-purple-100' : 'text-purple-800'} font-viga`}>📩 Invite</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
-                                <Text className={`text-sm ml-2 ${isDark ? 'text-gray-300' : 'text-gray-500'} font-viga`}>
-                                    {event.count}
-                                </Text>
-                            </View>
-                            <View className="flex-row flex-wrap gap-2">
-                                <TouchableOpacity className={`px-4 py-2 rounded-full ${isDark ? 'bg-green-800' : 'bg-green-100'}`}>
-                                    <Text className={`font-semibold ${isDark ? 'text-green-100' : 'text-green-800'} font-viga`}>✔ I'm Going</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity className={`px-4 py-2 rounded-full ${isDark ? 'bg-red-800' : 'bg-red-100'}`}>
-                                    <Text className={`${isDark ? 'text-red-100' : 'text-red-800'} font-viga`}>❤️ Like</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity className={`px-4 py-2 rounded-full ${isDark ? 'bg-blue-800' : 'bg-blue-100'}`}>
-                                    <Text className={`${isDark ? 'text-blue-100' : 'text-blue-800'} font-viga`}>🔗 Share</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity className={`px-4 py-2 rounded-full ${isDark ? 'bg-purple-800' : 'bg-purple-100'}`}>
-                                    <Text className={`${isDark ? 'text-purple-100' : 'text-purple-800'} font-viga`}>📩 Invite</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    ))}
+                            </TouchableOpacity>
+                        )
+                    })}
                 </View>
 
                 <View className="max-w-lg mx-auto px-4 py-8">
@@ -180,5 +233,5 @@ const styles = StyleSheet.create({
     mainImage: {
         width: 100,
         height: 100
-    }
+    },
 });

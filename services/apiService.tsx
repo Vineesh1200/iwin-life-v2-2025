@@ -1,26 +1,48 @@
 import axios from 'axios';
+import { getData } from './localStorage';
+import { useEffect, useState } from 'react';
 
 const API = axios.create({
-    baseURL: 'https://api.iwin.life/',
+    baseURL: 'http://localhost:3020/',
     headers: {
         Accept: 'application/json',
     },
 });
 
+const getToken = async (): Promise<string | null> => {
+    const token = await getData('token');
+    console.log('Resolved Token:', token);
+    return token;
+};
+
 API.interceptors.request.use(
     async (config: any) => {
-        const token = '';
+        const token = await getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
-    },//Error) => Promise.reject(error)
+    },
 );
 
 API.interceptors.response.use(
-    (response: any) => response,
-    (error: any) => {
-        console.error("API Error:", error.response?.data || error.message);
+    (response) => {
+        return response;
+    },
+    (error) => {
+        const status = error.response?.status;
+        const message = error.response?.data?.message || error.message;
+
+        if (status === 401) {
+            console.warn('Unauthorized - maybe token expired');
+        } else if (status === 404) {
+            console.warn('Resource not found');
+        } else if (status >= 500) {
+            console.error('Server error');
+        } else {
+            console.error('API Error:', message);
+        }
+
         return Promise.reject(error);
     }
 );
