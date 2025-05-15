@@ -128,7 +128,7 @@ const HomeScreen = () => {
                             ? event.details
                             : event.details.substring(0, 200);
                         return (
-                            <TouchableOpacity onPress={() => router.push('/detail')}>
+                            <TouchableOpacity onPress={() => router.push({ pathname: '/detail/[id]', params: { id: event._id } })}>
                                 <View
                                     key={index}
                                     className={`rounded-xl p-5 mb-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-[#ffffff]'} border ${isDark ? 'border-[#444444]' : 'border-[#dddddd]'} shadow-lg`}
@@ -165,7 +165,7 @@ const HomeScreen = () => {
                                                 <Image
                                                     key={index2}
                                                     source={{ uri: attendee }}
-                                                    defaultSource={{uri:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQD116U9ZCk8bEaanCeB5rSCC2uqY5Ka_2_EA&s"}}
+                                                    defaultSource={{ uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQD116U9ZCk8bEaanCeB5rSCC2uqY5Ka_2_EA&s" }}
                                                     className="w-8 h-8 rounded-full border-2 border-white"
                                                 />
                                             ))}

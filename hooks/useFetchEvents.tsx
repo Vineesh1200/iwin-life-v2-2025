@@ -26,18 +26,18 @@ export const useFetchEvents = () => {
 };
 
 export const useFetchSingleEvent = () => {
-    const [singleEvent, setSingleEvent] = useState<any[]>([]);
+    const [singleEvent, setSingleEvent] = useState<any>();
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const getSingleEvent = async (eventId: string) => {
+    const getSingleEvent = async (eventId: string | string[]) => {
         try {
             setLoading(true);
             setError(null);
 
             const data = await fetchSingleEvent(eventId);
 
-            setSingleEvent(data.events);
+            setSingleEvent(data.event);
         } catch (err) {
             // @ts-ignore
             setError(err instanceof Error ? err : new Error('An error occurred'));
